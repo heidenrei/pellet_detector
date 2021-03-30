@@ -1,3 +1,9 @@
+import cv2
+import os
+from tqdm import tqdm
+from copy import deepcopy
+import numpy as np
+
 def generate_dataset(input_folder, output_folder):
     assert os.path.isdir(input_folder) and os.path.isdir(output_folder)
     output_folder_1 = os.path.join(output_folder, "1")
@@ -9,8 +15,6 @@ def generate_dataset(input_folder, output_folder):
         os.mkdir(output_folder_0)
 
     video_files = [os.path.join(input_folder, item) for item in os.listdir(input_folder) if item.endswith('.avi')]
-    # video_files = [os.path.join(input_folder, item) for item in os.listdir(input_folder) if
-    #                item == '2020-01-18_(07-04-58)_002FBE71E101_85136_12950.avi']
 
     print(video_files)
 
@@ -29,14 +33,15 @@ def generate_dataset(input_folder, output_folder):
                 cv2.imshow('frame', showframe)
                 img_path = os.path.basename(video_file).replace(".avi", "") + "%d.jpg" % video_stream.get(
                     cv2.CAP_PROP_POS_FRAMES)
-                frame = cv2.resize(frame, (224, 224))
+                # frame = cv2.resize(frame, (224, 224))
+                frame = frame[140:260, 240:360]
                 if cv2.waitKey(0) == 49:
                     img_path = os.path.join(output_folder_1, img_path)
-                    frame = cv2.resize(frame, (224, 224))
+                    #frame = cv2.resize(frame, (224, 224))
                     cv2.imwrite(img_path, frame)
                 elif cv2.waitKey(0) == 50:
                     img_path = os.path.join(output_folder_0, img_path)
-                    frame = cv2.resize(frame, (224, 224))
+                    #frame = cv2.resize(frame, (224, 224))
                     cv2.imwrite(img_path, frame)
 
             grab, frame = video_stream.read()
@@ -72,3 +77,11 @@ def prepare_for_training(output_folder):
     x = x[index]
     y = y[index]
     return x, y
+
+input_folder = '/home/gavin/online_analysis/pellet_detector/raw_vids'
+output_folder = '/home/gavin/online_analysis/pellet_detector/data'
+
+if __name__ == "__main__":
+    generate_dataset(input_folder, output_folder)
+
+# (x,y) 270-360 165-250

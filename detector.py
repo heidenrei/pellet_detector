@@ -11,7 +11,7 @@ simplefilter(action='ignore', category=UserWarning)
 import keras
 import os
 import keras.backend as K
-from data_utils import prepare_for_training
+from gen_dataset import prepare_for_training
 import numpy as np
 import cv2
 from keras.preprocessing.image import ImageDataGenerator
@@ -42,7 +42,12 @@ class Detector():
         # x = keras.layers.Activation('relu')(x)
         #
         # x = keras.layers.Dense(1024)(x)
-        # x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.BatchNormalization()(x)
+        x = keras.layers.Dropout(0.5)(x)
+        x = keras.layers.Dense(32, activation='relu')(x)
+        x = keras.layers.Dense(16, activation='relu')(x)
+
+        x = keras.layers.Dense(8, activation='relu')(x)
         # x = keras.layers.Activation('relu')(x)
 
         output = keras.layers.Dense(1, activation='sigmoid')(x)
@@ -50,7 +55,7 @@ class Detector():
         if self.weights_path:
             print("Model loaded")
             model.load_weights(self.weights_path)
-        opt = keras.optimizers.Adam()
+        opt = keras.optimizers.Adam(learning_rate=1e-3)
         loss = keras.losses.binary_crossentropy
         metric = keras.metrics.binary_accuracy
         # metric = keras.metrics.AUC()
@@ -59,18 +64,17 @@ class Detector():
         # model.summary()
         return model
 
-    def train(self, x, y, batch_size=32, epoch=20, split=0.1):
+    def train(self, x, y, batch_size=8, epoch=30, split=0.4):
         te_index = int(x.shape[0] * split)
         teX, teY = x[0: te_index], y[0: te_index]
         trX, trY = x[te_index:], y[te_index:]
-
         datagen = ImageDataGenerator(
             featurewise_center=False,
             featurewise_std_normalization=False,
             rotation_range=15,
-            width_shift_range=0.1,
-            height_shift_range=0.1,
-            vertical_flip=True,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            horizontal_flip=True,
             # zoom_range=[0.9, 1.1],
             # brightness_range=[0.5, 1.2],
             rescale=1./255.
@@ -83,29 +87,27 @@ class Detector():
         step_per_epoch = int(trX.shape[0] / batch_size)
         test_datagen = ImageDataGenerator(rescale=1./255.)
         self.model.fit_generator(datagen.flow(trX, trY, batch_size=batch_size), steps_per_epoch=step_per_epoch, epochs=epoch,
-                                 callbacks=callBackList, validation_data=test_datagen.flow(teX, teY, batch_size=32), validation_steps=20)
+                                 callbacks=callBackList, validation_data=test_datagen.flow(teX, teY, batch_size=5), validation_steps=5)
 
     def predict(self, images):
         result = self.model.predict(images / 255.)
         return result
 
-    def predict_on_single_raw_image(self, opencv_image):
+    def predict_on_single_raw_image(self, frame):
         # pixel coords of pellet cam
-        start_row, start_col = int(720 - 448), int((1280 // 2) - (448 // 2))
-        end_row, end_col = int(720), int((1280 // 2) + (448 // 2))
-        opencv_image = opencv_image[start_row:end_row, start_col:end_col]
+        frame = frame[140:260, 240:360]
 
-        predict_image = np.asarray([cv2.resize(opencv_image, (224, 224))])
+        predict_image = np.asarray([cv2.resize(frame, (224, 224))])
         predict_image = predict_image / 255.
         return self.model.predict(predict_image)[0]
 
-    def predict_in_real_use(self, opencv_image):
+    def predict_in_real_use(self, frame):
         # pixel coords of pellet cam
-        start_row, start_col = int(720 - 448), int((1280 // 2) - (448 // 2))
-        end_row, end_col = int(720), int((1280 // 2) + (448 // 2))
-        opencv_image = opencv_image[start_row:end_row, start_col:end_col]
+        frame = frame[140:260, 240:360]
 
-        predict_image = np.asarray([cv2.resize(opencv_image, (224, 224))])
+
+        # predict_image = np.asarray([cv2.resize(frame, (224, 224))])
+        predict_image = np.asarray(frame)
         predict_image = predict_image / 255.
         if self.model.predict(predict_image)[0] > 0.5:
             return True
@@ -117,7 +119,7 @@ def test_on_video(video_file):
     # cap = cv2.VideoWriter('detector_sample.avi', fourcc, 30, (640, 360))
     grab, frame = video_stream.read()
     # print(frame.shape)
-    d = Detector("model/model.h5")
+    d = Detector()#"model/model.h5")
     frame_cnt = 0
     while frame is not None:
         if frame_cnt % 1 == 0:
@@ -154,12 +156,12 @@ if __name__ == '__main__':
     #
     if not TEST:
         d = Detector()
-        #
-        # output_folder = "/mnt/4T/pellet_output"
-        output_folder = 'labeled_data'
+        output_folder = os.getcwd() + os.sep + 'pellet_detector' + os.sep + 'data'
+        print(output_folder)
         x, y = prepare_for_training(output_folder)
         print(x.shape)
         print(y.shape)
+        print('printed shape?')
         d.train(x, y)
         # # #
         # print(d.predict(x[10: 20, :, : ,:]))
@@ -169,4 +171,4 @@ if __name__ == '__main__':
 
         print(os.getcwd())
         # test_on_video('/mnt/4T/dlc_reaching_3d/2020-01-27_(11-26-05)_00784A16A581_86885_18892.avi')
-        test_on_video('/home/silasi/3_mirror_homecage/detector_files/videos_for_testing/2020-10-20_(05-34-06)_00784A161B3F_17_3530.avi')
+        test_on_video('/home/gavin/online_analysis/pellet_detector/2021-03-29_(21-24-21)_00782B1A0F46_24_2028.avi')
