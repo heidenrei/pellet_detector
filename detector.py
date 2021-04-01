@@ -66,7 +66,7 @@ class Detector():
 
         model.compile(optimizer=opt, loss=loss, metrics=[metric])
         model.summary()
-        model.save('./saved_models/first_model.h5')
+        #model.save('./saved_models/first_model.h5')
         return model
 
     def train(self, x, y, batch_size=8, epoch=30, split=0.2):
@@ -105,7 +105,7 @@ class Detector():
         # pixel coords of pellet cam
         frame = frame[140:260, 240:360]
         cv2.imshow('test', frame)
-        predict_image = np.asarray([frame])
+        predict_image = np.asarray([frame], dtype='int32')
         predict_image = predict_image / 255.
         return self.model.predict(predict_image)[0]
 
