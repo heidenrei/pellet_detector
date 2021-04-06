@@ -29,3 +29,23 @@ converter.convert()
 
 # Save the model to the disk 
 converter.save('./converted_models')
+
+print(tf.__version__)
+
+try:
+    print('experimental')
+    print(dir(tf.experimental))
+    print()
+except:
+    pass
+
+try:
+    print('tensorrt')
+    print(dir(tf.experimental.tensorrt))
+except:
+    pass
+
+
+cvt = tf.experimental.tensorrt.Converter('/home/silasi/offline_analysis/saved_model')
+cvt.convert()
+cvt.save('/home/silasi/test_slide')
