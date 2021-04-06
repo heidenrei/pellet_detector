@@ -13,22 +13,22 @@ from tensorflow.python.compiler.tensorrt import trt_convert as trt
 
 
 # Conversion Parameters 
-conversion_params = trt.TrtConversionParams(
-    precision_mode=trt.TrtPrecisionMode.FP16)
+# conversion_params = trt.TrtConversionParams(
+#     precision_mode=trt.TrtPrecisionMode.FP16)
 
-converter = trt.TrtGraphConverterV2(
-    input_saved_model_dir='./saved_models',
-    conversion_params=conversion_params)
+# converter = trt.TrtGraphConverterV2(
+#     input_saved_model_dir='./saved_models',
+#     conversion_params=conversion_params)
 
-# Converter method used to partition and optimize TensorRT compatible segments
-converter.convert()
+# # Converter method used to partition and optimize TensorRT compatible segments
+# converter.convert()
 
-# Optionally, build TensorRT engines before deployment to save time at runtime
-# Note that this is GPU specific, and as a rule of thumb, we recommend building at runtime
-# converter.build(input_fn=my_input_fn)
+# # Optionally, build TensorRT engines before deployment to save time at runtime
+# # Note that this is GPU specific, and as a rule of thumb, we recommend building at runtime
+# # converter.build(input_fn=my_input_fn)
 
-# Save the model to the disk 
-converter.save('./converted_models')
+# # Save the model to the disk 
+# converter.save('./converted_models')
 
 print(tf.__version__)
 
@@ -46,6 +46,6 @@ except:
     pass
 
 
-cvt = tf.experimental.tensorrt.Converter('/home/silasi/offline_analysis/saved_model')
+cvt = tf.experimental.tensorrt.Converter('/home/gavin/online_analysis/saved_models')
 cvt.convert()
-cvt.save('/home/silasi/test_slide')
+cvt.save('/home/gavin/online_analysis')

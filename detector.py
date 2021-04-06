@@ -66,7 +66,7 @@ class Detector():
 
         model.compile(optimizer=opt, loss=loss, metrics=[metric])
         model.summary()
-        model.save('./saved_models/working_model.h5')
+        model.save('./saved_models')
         return model
 
     def train(self, x, y, batch_size=8, epoch=30, split=0.2):
